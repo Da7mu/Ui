@@ -3176,6 +3176,7 @@ function ah.New(aj,ak)
         RightDesc=ak.RightDesc,
         Ratio=ak.Ratio or 0.5,
         Gap=ak.Gap or 10,
+        ShowDivider=ak.ShowDivider or true,  -- Add this line for divider
         UIElements={},
         Elements={},
         LeftElements={},
@@ -3237,37 +3238,21 @@ function ah.New(aj,ak)
         }),
     })
     
-    -- Left Column Header
-    if al.LeftTitle then
-        local leftHeader=ae("Frame",{
-            Size=UDim2.new(1,0,0,0),
+    -- Add vertical divider line between columns
+    if al.ShowDivider then
+        local dividerContainer=ae("Frame",{
+            Size=UDim2.new(0,1,1,0),
             BackgroundTransparency=1,
-            Parent=al.LeftColumn,
-            AutomaticSize="Y",
+            Parent=splitContainer,
         },{
-            ae("TextLabel",{
-                Text=al.LeftTitle,
-                TextSize=18,
-                Font=Enum.Font.GothamSemibold,
-                TextXAlignment="Left",
-                TextColor3=Color3.new(1,1,1),
-                BackgroundTransparency=1,
-                Size=UDim2.new(1,0,0,25),
-            }),
-        })
-        
-        if al.LeftDesc then
-            ae("TextLabel",{
-                Text=al.LeftDesc,
-                TextSize=14,
-                Font=Enum.Font.Gotham,
-                TextXAlignment="Left",
-                TextColor3=Color3.new(0.8,0.8,0.8),
-                BackgroundTransparency=1,
-                Size=UDim2.new(1,0,0,20),
-                Parent=leftHeader,
+            ae("Frame",{
+                Size=UDim2.new(1,0,0.8,0),
+                Position=UDim2.new(0,0,0.1,0),
+                BackgroundColor3=Color3.fromRGB(255,255,255),
+                BackgroundTransparency=0.85,
+                BorderSizePixel=0,
             })
-        end
+        })
     end
     
     -- Right Column
@@ -3284,6 +3269,39 @@ function ah.New(aj,ak)
         }),
     })
     
+    -- Left Column Header
+    if al.LeftTitle then
+        local leftHeader=ae("Frame",{
+            Size=UDim2.new(1,0,0,0),
+            BackgroundTransparency=1,
+            Parent=al.LeftColumn,
+            AutomaticSize="Y",
+        },{
+            ae("TextLabel",{
+                Text=al.LeftTitle,
+                TextSize=16,
+                Font=Enum.Font.GothamSemibold,
+                TextXAlignment="Left",
+                TextColor3=Color3.new(1,1,1),
+                BackgroundTransparency=1,
+                Size=UDim2.new(1,0,0,25),
+            }),
+        })
+        
+        if al.LeftDesc then
+            ae("TextLabel",{
+                Text=al.LeftDesc,
+                TextSize=12,
+                Font=Enum.Font.Gotham,
+                TextXAlignment="Left",
+                TextColor3=Color3.new(0.8,0.8,0.8),
+                BackgroundTransparency=1,
+                Size=UDim2.new(1,0,0,18),
+                Parent=leftHeader,
+            })
+        end
+    end
+    
     -- Right Column Header
     if al.RightTitle then
         local rightHeader=ae("Frame",{
@@ -3294,7 +3312,7 @@ function ah.New(aj,ak)
         },{
             ae("TextLabel",{
                 Text=al.RightTitle,
-                TextSize=18,
+                TextSize=16,
                 Font=Enum.Font.GothamSemibold,
                 TextXAlignment="Left",
                 TextColor3=Color3.new(1,1,1),
@@ -3306,12 +3324,12 @@ function ah.New(aj,ak)
         if al.RightDesc then
             ae("TextLabel",{
                 Text=al.RightDesc,
-                TextSize=14,
+                TextSize=12,
                 Font=Enum.Font.Gotham,
                 TextXAlignment="Left",
                 TextColor3=Color3.new(0.8,0.8,0.8),
                 BackgroundTransparency=1,
-                Size=UDim2.new(1,0,0,20),
+                Size=UDim2.new(1,0,0,18),
                 Parent=rightHeader,
             })
         end
@@ -3411,11 +3429,6 @@ function ah.New(aj,ak)
     
     return al.__type, al
 end
-
-return ah end
-
-
-
 
 return ah end
 
