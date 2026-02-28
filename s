@@ -4621,7 +4621,136 @@ end
 return ak
 end
 
+function a.SS()
+    local aa = {}
+    local ab = a.load'b'
+    local ac = ab.New
 
+    function aa.New(ag, ah)
+        local ai = {
+            __type   = "SplitSection",
+            Left     = { __type = "SplitLeft",  Elements = {} },
+            Right    = { __type = "SplitRight", Elements = {} },
+            Elements = {},
+        }
+
+        local gap     = ah.Tab and ah.Tab.Gap or 6
+        local uipad   = ah.Window and ah.Window.ElementConfig
+                        and ah.Window.ElementConfig.UIPadding or 13
+
+        -- ── Outer wrapper (height managed manually) ──────────────────────
+        local outerFrame = ac("Frame", {
+            Size               = UDim2.new(1, 0, 0, 0),
+            BackgroundTransparency = 1,
+            ClipsDescendants   = false,
+            Parent             = ah.Parent,
+        })
+
+        -- ── Left column ──────────────────────────────────────────────────
+        local leftList = ac("UIListLayout", {
+            FillDirection  = "Vertical",
+            Padding        = UDim.new(0, gap),
+            SortOrder      = "LayoutOrder",
+            VerticalAlignment = "Top",
+        })
+        local leftFrame = ac("Frame", {
+            Size               = UDim2.new(0.5, -6, 0, 0),
+            AutomaticSize      = "Y",
+            BackgroundTransparency = 1,
+            Position           = UDim2.new(0, 0, 0, 0),
+            Parent             = outerFrame,
+        }, { leftList })
+
+        -- Optional left header label
+        if ah.Left and ah.Left.Title and ah.Left.Title ~= "" then
+            ac("TextLabel", {
+                Text               = ah.Left.Title,
+                TextSize           = 14,
+                TextXAlignment     = "Left",
+                TextTransparency   = 0.35,
+                FontFace           = Font.new(ab.Font, Enum.FontWeight.SemiBold),
+                BackgroundTransparency = 1,
+                Size               = UDim2.new(1, 0, 0, 0),
+                AutomaticSize      = "Y",
+                ThemeTag           = { TextColor3 = "Text" },
+                Parent             = leftFrame,
+            })
+        end
+
+        -- ── Center divider (vertical line) ───────────────────────────────
+        local divider = ac("Frame", {
+            Size               = UDim2.new(0, 1, 0, 0),   -- height synced below
+            Position           = UDim2.new(0.5, -1, 0, 0),
+            BackgroundTransparency = 0.85,
+            ThemeTag           = { BackgroundColor3 = "Text" },
+            Parent             = outerFrame,
+        })
+
+        -- ── Right column ─────────────────────────────────────────────────
+        local rightList = ac("UIListLayout", {
+            FillDirection  = "Vertical",
+            Padding        = UDim.new(0, gap),
+            SortOrder      = "LayoutOrder",
+            VerticalAlignment = "Top",
+        })
+        local rightFrame = ac("Frame", {
+            Size               = UDim2.new(0.5, -6, 0, 0),
+            AutomaticSize      = "Y",
+            BackgroundTransparency = 1,
+            Position           = UDim2.new(0.5, 6, 0, 0),
+            Parent             = outerFrame,
+        }, { rightList })
+
+        -- Optional right header label
+        if ah.Right and ah.Right.Title and ah.Right.Title ~= "" then
+            ac("TextLabel", {
+                Text               = ah.Right.Title,
+                TextSize           = 14,
+                TextXAlignment     = "Left",
+                TextTransparency   = 0.35,
+                FontFace           = Font.new(ab.Font, Enum.FontWeight.SemiBold),
+                BackgroundTransparency = 1,
+                Size               = UDim2.new(1, 0, 0, 0),
+                AutomaticSize      = "Y",
+                ThemeTag           = { TextColor3 = "Text" },
+                Parent             = rightFrame,
+            })
+        end
+
+        -- ── Keep outer height and divider height in sync ─────────────────
+        local function syncHeight()
+            task.defer(function()
+                local lh = leftList.AbsoluteContentSize.Y
+                local rh = rightList.AbsoluteContentSize.Y
+                local h  = math.max(lh, rh, 1)
+                outerFrame.Size = UDim2.new(1, 0, 0, h)
+                divider.Size    = UDim2.new(0, 1, 0, h)
+            end)
+        end
+
+        ab.AddSignal(
+            leftList:GetPropertyChangedSignal("AbsoluteContentSize"),  syncHeight)
+        ab.AddSignal(
+            rightList:GetPropertyChangedSignal("AbsoluteContentSize"), syncHeight)
+
+        -- ── Give .Left and .Right all standard element methods ────────────
+        local em = a.load'T'
+        em.Load(ai.Left,  leftFrame,  em.Elements,
+                ah.Window, ah.WindUI, nil, em, ah.UIScale, ah.Tab)
+        em.Load(ai.Right, rightFrame, em.Elements,
+                ah.Window, ah.WindUI, nil, em, ah.UIScale, ah.Tab)
+
+        ai.ElementFrame = outerFrame
+
+        function ai.Destroy()
+            outerFrame:Destroy()
+        end
+
+        return ai.__type, ai
+    end
+
+    return aa
+end
 
 return aa end function a.z()
 local aa=a.load'b'
@@ -9031,6 +9160,7 @@ Divider=a.load'I',
 Space=a.load'Q',
 Image=a.load'R',
 Group=a.load'S',
+SplitSection= a.load'SS',
 
 },
 Load=function(aa,ae,af,ah,aj,ak,al,am,an)
