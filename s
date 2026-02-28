@@ -4621,6 +4621,202 @@ end
 return ak
 end
 
+function a.P()
+local aa={}
+local ab=a.load'b'
+local ac=ab.New
+local ad=ab.Tween
+
+function aa.New(ae,af)
+    local ag={
+        __type="Section",
+        Title=af.Title or"Section",
+        Icon=af.Icon or nil,
+        Desc=af.Desc or nil,
+        IsOpen=af.Open~=false,
+        Locked=af.Locked or false,
+        Elements={},
+        AllElements={},
+        UIElements={}
+    }
+
+    local ah=ac("ImageLabel",{
+        Image=ab.Icon"chevron-down"[1],
+        ImageRectOffset=ab.Icon"chevron-down"[2].ImageRectPosition,
+        ImageRectSize=ab.Icon"chevron-down"[2].ImageRectSize,
+        Size=UDim2.new(0,17,0,17),
+        BackgroundTransparency=1,
+        AnchorPoint=Vector2.new(1,0.5),
+        Position=UDim2.new(1,0,0.5,0),
+        ThemeTag={ImageColor3="Icon"},
+    })
+
+    local ai
+    if af.Icon then
+        ai=ac("ImageLabel",{
+            Image=ab.Icon(af.Icon)[1],
+            ImageRectOffset=ab.Icon(af.Icon)[2].ImageRectPosition,
+            ImageRectSize=ab.Icon(af.Icon)[2].ImageRectSize,
+            Size=UDim2.new(0,18,0,18),
+            BackgroundTransparency=1,
+            ThemeTag={ImageColor3="Icon"},
+        })
+    end
+
+    local aj=ac("TextLabel",{
+        Text=af.Title or"Section",
+        TextSize=16,
+        FontFace=Font.new(ab.Font,Enum.FontWeight.SemiBold),
+        BackgroundTransparency=1,
+        AutomaticSize="XY",
+        TextXAlignment="Left",
+        ThemeTag={TextColor3="Text"},
+    })
+
+    local ak=ac("TextButton",{
+        Size=UDim2.new(1,0,0,40),
+        BackgroundTransparency=1,
+        Text="",
+        ZIndex=2,
+    },{
+        ac("UIListLayout",{
+            FillDirection="Horizontal",
+            Padding=UDim.new(0,10),
+            VerticalAlignment="Center",
+        }),
+        ac("UIPadding",{
+            PaddingLeft=UDim.new(0,13),
+            PaddingRight=UDim.new(0,13),
+        }),
+        ai,
+        aj,
+        ah,
+    })
+
+    -- Body that holds child elements
+    local al=ac("Frame",{
+        Size=UDim2.new(1,0,0,0),
+        AutomaticSize="Y",
+        BackgroundTransparency=1,
+        ClipsDescendants=false,
+    },{
+        ac("UIListLayout",{
+            Padding=UDim.new(0,6),
+            SortOrder="LayoutOrder",
+        }),
+        ac("UIPadding",{
+            PaddingLeft=UDim.new(0,8),
+            PaddingRight=UDim.new(0,8),
+            PaddingBottom=UDim.new(0,8),
+        }),
+    })
+
+    local UICorner=af.Window and af.Window.ElementConfig and af.Window.ElementConfig.UICorner or 12
+
+    -- Outer bordered box
+    local am=ab.NewRoundFrame(UICorner,"Squircle",{
+        Size=UDim2.new(1,0,0,0),
+        AutomaticSize="Y",
+        Parent=af.Parent,
+        ThemeTag={
+            ImageColor3="SectionBox",
+            ImageTransparency="SectionBoxTransparency",
+        },
+    },{
+        ab.NewRoundFrame(UICorner,"Glass-1",{
+            Size=UDim2.new(1,0,1,0),
+            ThemeTag={
+                ImageColor3="SectionBoxBorder",
+                ImageTransparency="SectionBoxBorderTransparency",
+            },
+        }),
+        -- Thin line divider between header and body
+        ac("Frame",{
+            Name="Divider",
+            Size=UDim2.new(1,0,0,1),
+            BackgroundTransparency=0.85,
+            ThemeTag={BackgroundColor3="Text"},
+            Visible=ag.IsOpen,
+            ZIndex=2,
+        }),
+        ak,
+        al,
+    })
+
+    ag.UIElements.Main=am
+    ag.UIElements.Body=al
+    ag.UIElements.Header=ak
+    ag.UIElements.Arrow=ah
+    ag.UIElements.Divider=am:FindFirstChild"Divider"
+
+    -- Open/close logic
+    local function setOpen(ao)
+        ag.IsOpen=ao
+        if ao then
+            ad(ah,0.25,{Rotation=0},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
+            al.Visible=true
+            if ag.UIElements.Divider then
+                ag.UIElements.Divider.Visible=true
+            end
+        else
+            ad(ah,0.25,{Rotation=-90},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
+            task.delay(0.22,function()
+                if not ag.IsOpen then
+                    al.Visible=false
+                    if ag.UIElements.Divider then
+                        ag.UIElements.Divider.Visible=false
+                    end
+                end
+            end)
+        end
+    end
+
+    -- Initialize state
+    if not ag.IsOpen then
+        ah.Rotation=-90
+        al.Visible=false
+    end
+
+    ab.AddSignal(ak.MouseButton1Click,function()
+        setOpen(not ag.IsOpen)
+    end)
+
+    -- Expose hover on header
+    ab.AddSignal(ak.MouseEnter,function()
+        ad(ak,0.08,{BackgroundTransparency=0.94}):Play()
+    end)
+    ab.AddSignal(ak.MouseLeave,function()
+        ad(ak,0.08,{BackgroundTransparency=1}):Play()
+    end)
+
+    -- Load all element methods into section body
+    local em=a.load'T'
+    em.Load(ag,al,em.Elements,af.Window,af.WindUI,nil,em,af.UIScale,af.Tab)
+
+    function ag.Open(an) setOpen(true) end
+    function ag.Close(an) setOpen(false) end
+    function ag.Toggle(an) setOpen(not ag.IsOpen) end
+
+    function ag.Lock(an)
+        ag.Locked=true
+    end
+    function ag.Unlock(an)
+        ag.Locked=false
+    end
+    function ag.SetTitle(an,ao)
+        ag.Title=ao
+        aj.Text=ao
+    end
+    function ag.Destroy(an)
+        am:Destroy()
+    end
+
+    return ag.__type,ag
+end
+
+return aa
+end
+
 function a.SS()
     local aa = {}
     local ab = a.load'b'
