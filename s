@@ -9355,6 +9355,7 @@ Section=a.load'P',
 Divider=a.load'I',
 Space=a.load'Q',
 Image=a.load'R',
+Section=a.load'P',
 Group=a.load'S',
 SplitSection= a.load'SS',
 
