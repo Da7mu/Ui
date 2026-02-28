@@ -3158,281 +3158,7 @@ ah:Open()
 return af
 end
 
--- ========== ADD YOUR SPLIT SECTION MODULE HERE ==========
-function a.Z()
-local aa=a.load'b'
-local ae=aa.New
-local af=aa.Tween
-
-local ah={}
-
-function ah.New(aj,ak)
-    local al={
-        __type="SplitSection",
-        Title=ak.Title or"Split Section",
-        LeftTitle=ak.LeftTitle or"Left",
-        RightTitle=ak.RightTitle or"Right",
-        LeftDesc=ak.LeftDesc,
-        RightDesc=ak.RightDesc,
-        Ratio=ak.Ratio or 0.5,
-        Gap=ak.Gap or 10,
-        ShowDivider=ak.ShowDivider or true,  -- Add this line for divider
-        UIElements={},
-        Elements={},
-        LeftElements={},
-        RightElements={},
-    }
-    
-    -- Main container
-    al.ElementFrame=ae("Frame",{
-        Size=UDim2.new(1,0,0,0),
-        BackgroundTransparency=1,
-        Parent=ak.Parent,
-        AutomaticSize="Y",
-    },{
-        ae("UIListLayout",{
-            FillDirection="Vertical",
-            Padding=UDim.new(0,al.Gap),
-        }),
-    })
-    
-    -- Title for the whole split section
-    if al.Title then
-        ae("TextLabel",{
-            Text=al.Title,
-            TextSize=20,
-            Font=Enum.Font.GothamSemibold,
-            TextXAlignment="Left",
-            TextColor3=Color3.new(1,1,1),
-            BackgroundTransparency=1,
-            Size=UDim2.new(1,0,0,30),
-            Parent=al.ElementFrame,
-        })
-    end
-    
-    -- Container for the two columns
-    local splitContainer=ae("Frame",{
-        Size=UDim2.new(1,0,0,0),
-        BackgroundTransparency=1,
-        Parent=al.ElementFrame,
-        AutomaticSize="Y",
-    },{
-        ae("UIListLayout",{
-            FillDirection="Horizontal",
-            Padding=UDim.new(0,al.Gap),
-            HorizontalAlignment="Center",
-        }),
-    })
-    
-    -- Left Column
-    al.LeftColumn=ae("Frame",{
-        Size=UDim2.new(al.Ratio, -al.Gap/2, 0,0),
-        BackgroundTransparency=1,
-        Parent=splitContainer,
-        AutomaticSize="Y",
-        Name="LeftColumn",
-    },{
-        ae("UIListLayout",{
-            FillDirection="Vertical",
-            Padding=UDim.new(0,8),
-        }),
-    })
-    
-    -- Add vertical divider line between columns
-    if al.ShowDivider then
-        local dividerContainer=ae("Frame",{
-            Size=UDim2.new(0,1,1,0),
-            BackgroundTransparency=1,
-            Parent=splitContainer,
-        },{
-            ae("Frame",{
-                Size=UDim2.new(1,0,0.8,0),
-                Position=UDim2.new(0,0,0.1,0),
-                BackgroundColor3=Color3.fromRGB(255,255,255),
-                BackgroundTransparency=0.85,
-                BorderSizePixel=0,
-            })
-        })
-    end
-    
-    -- Right Column
-    al.RightColumn=ae("Frame",{
-        Size=UDim2.new(1-al.Ratio, -al.Gap/2, 0,0),
-        BackgroundTransparency=1,
-        Parent=splitContainer,
-        AutomaticSize="Y",
-        Name="RightColumn",
-    },{
-        ae("UIListLayout",{
-            FillDirection="Vertical",
-            Padding=UDim.new(0,8),
-        }),
-    })
-    
-    -- Left Column Header
-    if al.LeftTitle then
-        local leftHeader=ae("Frame",{
-            Size=UDim2.new(1,0,0,0),
-            BackgroundTransparency=1,
-            Parent=al.LeftColumn,
-            AutomaticSize="Y",
-        },{
-            ae("TextLabel",{
-                Text=al.LeftTitle,
-                TextSize=16,
-                Font=Enum.Font.GothamSemibold,
-                TextXAlignment="Left",
-                TextColor3=Color3.new(1,1,1),
-                BackgroundTransparency=1,
-                Size=UDim2.new(1,0,0,25),
-            }),
-        })
-        
-        if al.LeftDesc then
-            ae("TextLabel",{
-                Text=al.LeftDesc,
-                TextSize=12,
-                Font=Enum.Font.Gotham,
-                TextXAlignment="Left",
-                TextColor3=Color3.new(0.8,0.8,0.8),
-                BackgroundTransparency=1,
-                Size=UDim2.new(1,0,0,18),
-                Parent=leftHeader,
-            })
-        end
-    end
-    
-    -- Right Column Header
-    if al.RightTitle then
-        local rightHeader=ae("Frame",{
-            Size=UDim2.new(1,0,0,0),
-            BackgroundTransparency=1,
-            Parent=al.RightColumn,
-            AutomaticSize="Y",
-        },{
-            ae("TextLabel",{
-                Text=al.RightTitle,
-                TextSize=16,
-                Font=Enum.Font.GothamSemibold,
-                TextXAlignment="Left",
-                TextColor3=Color3.new(1,1,1),
-                BackgroundTransparency=1,
-                Size=UDim2.new(1,0,0,25),
-            }),
-        })
-        
-        if al.RightDesc then
-            ae("TextLabel",{
-                Text=al.RightDesc,
-                TextSize=12,
-                Font=Enum.Font.Gotham,
-                TextXAlignment="Left",
-                TextColor3=Color3.new(0.8,0.8,0.8),
-                BackgroundTransparency=1,
-                Size=UDim2.new(1,0,0,18),
-                Parent=rightHeader,
-            })
-        end
-    end
-    
-    -- Element loading system
-    local as=ak.ElementsModule
-    
-    -- Left side elements
-    function al:Left(elementType, config)
-        config = config or {}
-        config.Parent = self.LeftColumn
-        config.Window = ak.Window
-        config.WindUI = ak.WindUI
-        config.Tab = ak.Tab
-        config.ParentType = "SplitSection"
-        config.ParentTable = self
-        config.Index = #self.LeftElements + 1
-        config.ElementsModule = as
-        
-        local elementTypeFunc = as.Elements[elementType]
-        if elementTypeFunc then
-            local elementTypeName, element = elementTypeFunc.New(config)
-            self.LeftElements[config.Index] = element
-            table.insert(ak.Window.AllElements, element)
-            return element
-        end
-    end
-    
-    -- Right side elements
-    function al:Right(elementType, config)
-        config = config or {}
-        config.Parent = self.RightColumn
-        config.Window = ak.Window
-        config.WindUI = ak.WindUI
-        config.Tab = ak.Tab
-        config.ParentType = "SplitSection"
-        config.ParentTable = self
-        config.Index = #self.RightElements + 1
-        config.ElementsModule = as
-        
-        local elementTypeFunc = as.Elements[elementType]
-        if elementTypeFunc then
-            local elementTypeName, element = elementTypeFunc.New(config)
-            self.RightElements[config.Index] = element
-            table.insert(ak.Window.AllElements, element)
-            return element
-        end
-    end
-    
-    -- Direct methods
-    function al:Toggle(config)
-        return self:Left("Toggle", config)
-    end
-    
-    function al:Button(config)
-        return self:Left("Button", config)
-    end
-    
-    function al:Slider(config)
-        return self:Left("Slider", config)
-    end
-    
-    function al:Dropdown(config)
-        return self:Left("Dropdown", config)
-    end
-    
-    function al:Input(config)
-        return self:Left("Input", config)
-    end
-    
-    function al:RightToggle(config)
-        return self:Right("Toggle", config)
-    end
-    
-    function al:RightButton(config)
-        return self:Right("Button", config)
-    end
-    
-    function al:RightSlider(config)
-        return self:Right("Slider", config)
-    end
-    
-    function al:RightDropdown(config)
-        return self:Right("Dropdown", config)
-    end
-    
-    function al:RightInput(config)
-        return self:Right("Input", config)
-    end
-    
-    function al:SetRatio(ratio)
-        al.Ratio = math.clamp(ratio, 0.2, 0.8)
-        self.LeftColumn.Size = UDim2.new(al.Ratio, -al.Gap/2, 0, 0)
-        self.RightColumn.Size = UDim2.new(1-al.Ratio, -al.Gap/2, 0, 0)
-    end
-    
-    return al.__type, al
-end
-
-return ah end
-
-function a.s()
+return aa end function a.s()
 return function(aa)
 return{
 Dark={
@@ -9181,6 +8907,12 @@ al.BackgroundTransparency=1
 
 
 
+
+
+
+
+
+
 local am=ParseAspectRatio(ak.AspectRatio)
 local an
 
@@ -9199,8 +8931,6 @@ end
 
 return ak.__type,ak
 end
-
-
 
 return af end function a.S()
 local aa=a.load'b'
@@ -9297,7 +9027,6 @@ Dropdown=a.load'K',
 Code=a.load'N',
 Colorpicker=a.load'O',
 Section=a.load'P',
-SplitSection=a.load'Z',
 Divider=a.load'I',
 Space=a.load'Q',
 Image=a.load'R',
@@ -9848,7 +9577,7 @@ end
 
 local az=a.load'T'
 
-az.Load(ap, ap.UIElements.ContainerFrame, az.Elements, Window, WindUI, nil, az, ao)
+az.Load(ap,ap.UIElements.ContainerFrame,az.Elements,Window,WindUI,nil,az,ao)
 
 
 
