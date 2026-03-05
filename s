@@ -1,10 +1,3 @@
--- Da7muUI v1.0.0
--- Modern sidebar-style Roblox UI Library
--- GitHub-friendly: place this file in your repo as main.lua
--- Usage:
--- local Da7mu = loadstring(game:HttpGet("https://raw.githubusercontent.com/YOUR_USERNAME/Da7muUI/main/main.lua"))()
--- local Window = Da7mu:CreateWindow({...})
-
 local Da7muUI = {}
 Da7muUI.__index = Da7muUI
 
