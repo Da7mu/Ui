@@ -1,606 +1,631 @@
---[=[
- d888b db db d888888b .d888b. db db db .d8b.
-88' Y8b 88 88 `88' VP `8D 88 88 88 d8' `8b
-88 88 88 88 odD' 88 88 88 88ooo88
-88 ooo 88 88 88 .88' 88 88 88 88~~~88
-88. ~8~ 88b d88 .88. j88. 88booo. 88b d88 88 88 @uniquadev
- Y888P ~Y8888P' Y888888P 888888D Y88888P ~Y8888P' YP YP CONVERTER
-]=]
+-- Da7muUI v1.0.0
+-- Modern sidebar-style Roblox UI Library
+-- GitHub-friendly: place this file in your repo as main.lua
+-- Usage:
+-- local Da7mu = loadstring(game:HttpGet("https://raw.githubusercontent.com/YOUR_USERNAME/Da7muUI/main/main.lua"))()
+-- local Window = Da7mu:CreateWindow({...})
 
--- Da7mUI Library - Modern Sidebar Roblox UI Library
--- Load with: local Da7mUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/YOURUSERNAME/YOURREPO/main/Da7mUI.lua"))()
-
-local Da7mUI = {}
-Da7mUI.__index = Da7mUI
+local Da7muUI = {}
+Da7muUI.__index = Da7muUI
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-local function CreateInstance(class, props)
-	local inst = Instance.new(class)
-	for k, v in pairs(props or {}) do
-		inst[k] = v
-	end
-	return inst
+local DEFAULT_THEME = {
+    Accent       = Color3.fromRGB(36, 120, 255),
+    Background   = Color3.fromRGB(8, 11, 12),
+    Dark         = Color3.fromRGB(17, 18, 25),
+    Card         = Color3.fromRGB(22, 21, 28),
+    Text         = Color3.fromRGB(207, 207, 207),
+    SubText      = Color3.fromRGB(105, 105, 112),
+    Border       = Color3.fromRGB(29, 29, 33),
+}
+
+-- ────────────────────────────────────────────────────────────────────────────────
+--  Utility Functions
+-- ────────────────────────────────────────────────────────────────────────────────
+
+local function tween(obj, info, props)
+    TweenService:Create(obj, info or TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), props):Play()
 end
 
-function Da7mUI:CreateWindow(config)
-	config = config or {}
-	local self = setmetatable({}, Da7mUI)
-
-	self.Tabs = {}
-	self.CurrentTab = nil
-	self.Config = config
-
-	-- Main ScreenGui
-	self.ScreenGui = CreateInstance("ScreenGui", {
-		Name = "Da7muLibrary",
-		IgnoreGuiInset = true,
-		ScreenInsets = Enum.ScreenInsets.None,
-		ResetOnSpawn = false,
-		Parent = LocalPlayer:WaitForChild("PlayerGui")
-	})
-
-	-- Main Frame
-	self.Main = CreateInstance("Frame", {
-		Name = "Main",
-		BackgroundColor3 = Color3.fromRGB(8, 8, 10),
-		BackgroundTransparency = config.Transparent and 0.03 or 0,
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Size = config.Size or UDim2.fromOffset(660, 525),
-		Position = UDim2.new(0.5, 0, 0.5, 0),
-		BorderSizePixel = 0,
-		Parent = self.ScreenGui
-	})
-
-	CreateInstance("UICorner", {CornerRadius = UDim.new(0, 12), Parent = self.Main})
-
-	-- Drop Shadow
-	local DropShadowHolder = CreateInstance("Frame", {
-		Name = "DropShadowHolder",
-		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 1, 0),
-		ZIndex = 0,
-		Parent = self.Main
-	})
-	self.DropShadow = CreateInstance("ImageLabel", {
-		Name = "DropShadow",
-		Image = "rbxassetid://6014261993",
-		ImageColor3 = Color3.fromRGB(0, 0, 0),
-		ImageTransparency = 0.5,
-		ScaleType = Enum.ScaleType.Slice,
-		SliceCenter = Rect.new(49, 49, 450, 450),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Size = UDim2.new(1, 47, 1, 47),
-		Position = UDim2.new(0.5, 0, 0.5, 0),
-		BackgroundTransparency = 1,
-		ZIndex = 0,
-		Parent = DropShadowHolder
-	})
-
-	-- TopBar
-	self.TopBar = CreateInstance("Frame", {
-		Name = "TopBar",
-		BackgroundColor3 = Color3.fromRGB(8, 8, 10),
-		BackgroundTransparency = 0.8,
-		Size = UDim2.new(1, 0, 0, 60),
-		BorderSizePixel = 0,
-		Parent = self.Main
-	})
-	CreateInstance("UICorner", {Parent = self.TopBar})
-
-	-- TopBar Title + Icon
-	local TitleHolder = CreateInstance("Frame", {
-		Name = "TitleHolder",
-		BackgroundTransparency = 1,
-		Size = UDim2.new(0.4, 0, 1, 0),
-		Position = UDim2.new(0, 20, 0, 0),
-		Parent = self.TopBar
-	})
-	self.WindowTitle = CreateInstance("TextLabel", {
-		Name = "Title",
-		Text = config.Title or "Da7mu Hub",
-		TextColor3 = Color3.fromRGB(255, 255, 255),
-		TextSize = 18,
-		FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Bold),
-		TextXAlignment = Enum.TextXAlignment.Left,
-		BackgroundTransparency = 1,
-		Size = UDim2.new(1, -50, 1, 0),
-		Parent = TitleHolder
-	})
-	if config.Icon then
-		self.WindowIcon = CreateInstance("ImageLabel", {
-			Name = "Icon",
-			Image = config.Icon,
-			ImageColor3 = Color3.fromRGB(255, 255, 255),
-			Size = UDim2.new(0, config.IconSize or 28, 0, config.IconSize or 28),
-			Position = UDim2.new(0, 0, 0.5, -14),
-			BackgroundTransparency = 1,
-			Parent = TitleHolder
-		})
-	end
-
-	-- Author
-	if config.Author then
-		CreateInstance("TextLabel", {
-			Name = "Author",
-			Text = config.Author,
-			TextColor3 = Color3.fromRGB(156, 160, 164),
-			TextSize = 12,
-			FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json"),
-			TextXAlignment = Enum.TextXAlignment.Left,
-			BackgroundTransparency = 1,
-			Position = UDim2.new(0, 0, 1, -18),
-			Size = UDim2.new(1, 0, 0, 15),
-			Parent = TitleHolder
-		})
-	end
-
-	-- Close Button
-	self.CloseButton = CreateInstance("ImageButton", {
-		Name = "Close",
-		Image = "rbxassetid://10734943674",
-		Size = UDim2.new(0, 20, 0, 20),
-		Position = UDim2.new(1, -30, 0.5, -10),
-		BackgroundTransparency = 1,
-		Parent = self.TopBar
-	})
-	self.CloseButton.MouseButton1Click:Connect(function()
-		self.ScreenGui:Destroy()
-	end)
-
-	-- User Icon (optional)
-	if config.User and config.User.Enabled then
-		self.UserButton = CreateInstance("ImageButton", {
-			Name = "User",
-			Image = config.User.Anonymous and "rbxassetid://10734950309" or "rbxassetid://10734949999", -- anonymous / user icon
-			Size = UDim2.new(0, 26, 0, 26),
-			Position = UDim2.new(1, -70, 0.5, -13),
-			BackgroundTransparency = 1,
-			Parent = self.TopBar
-		})
-		self.UserButton.MouseButton1Click:Connect(config.User.Callback or function() end)
-	end
-
-	-- Navigation Sidebar
-	self.Navigation = CreateInstance("Frame", {
-		Name = "Navigation",
-		BackgroundColor3 = Color3.fromRGB(21, 20, 25),
-		BackgroundTransparency = 0.6,
-		Size = UDim2.new(0, config.SideBarWidth or 200, 1, -60),
-		Position = UDim2.new(0, 0, 0, 60),
-		BorderSizePixel = 0,
-		Parent = self.Main
-	})
-	CreateInstance("UICorner", {Parent = self.Navigation})
-
-	self.ButtonHolder = CreateInstance("Frame", {
-		Name = "ButtonHolder",
-		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 1, -20),
-		Position = UDim2.new(0, 0, 0, 10),
-		Parent = self.Navigation
-	})
-	CreateInstance("UIPadding", {PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8), Parent = self.ButtonHolder})
-	self.NavListLayout = CreateInstance("UIListLayout", {
-		SortOrder = Enum.SortOrder.LayoutOrder,
-		Padding = UDim.new(0, 4),
-		Parent = self.ButtonHolder
-	})
-
-	-- Content Container
-	self.ContentContainer = CreateInstance("Frame", {
-		Name = "ContentContainer",
-		BackgroundTransparency = 1,
-		Size = UDim2.new(1, -(config.SideBarWidth or 200) - 12, 1, -72),
-		Position = UDim2.new(1, -6, 0, 66),
-		Parent = self.Main
-	})
-
-	-- Background Image
-	if config.Background then
-		self.BackgroundImage = CreateInstance("ImageLabel", {
-			Name = "Background",
-			Image = config.Background,
-			ImageTransparency = config.BackgroundImageTransparency or 0.5,
-			Size = UDim2.new(1, 0, 1, 0),
-			BackgroundTransparency = 1,
-			Parent = self.Main
-		})
-		CreateInstance("UICorner", {CornerRadius = UDim.new(0, 12), Parent = self.BackgroundImage})
-	end
-
-	-- Dragging
-	local dragging, dragInput, dragStart, startPos
-	local function update(input)
-		local delta = input.Position - dragStart
-		self.Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-	end
-	self.TopBar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = input.Position
-			startPos = self.Main.Position
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then dragging = false end
-			end)
-		end
-	end)
-	self.TopBar.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			dragInput = input
-		end
-	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if input == dragInput and dragging then update(input) end
-	end)
-
-	-- Resizable (simple constraint)
-	if config.Resizable then
-		local sizeConstraint = CreateInstance("UISizeConstraint", {
-			MinSize = config.MinSize or Vector2.new(560, 350),
-			MaxSize = config.MaxSize or Vector2.new(850, 560),
-			Parent = self.Main
-		})
-	end
-
-	-- Store references
-	self.NavButtons = {}
-	self.TabContents = {}
-
-	return self
+local function create(class, props)
+    local inst = Instance.new(class)
+    for k, v in pairs(props or {}) do
+        if k ~= "Parent" then
+            pcall(function() inst[k] = v end)
+        end
+    end
+    if props and props.Parent then
+        inst.Parent = props.Parent
+    end
+    return inst
 end
 
--- Create Tab
-function Da7mUI:CreateTab(config)
-	local tab = {}
-	tab.Name = config.Title or "Tab"
-	tab.Icon = config.Icon or "rbxassetid://10723407389"
-
-	-- Tab Button
-	local isFirst = #self.Tabs == 0
-	local button = CreateInstance("TextButton", {
-		Name = isFirst and "Active" or "Inactive",
-		Text = tab.Name,
-		TextColor3 = isFirst and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(177, 177, 177),
-		TextSize = 14,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json"),
-		BackgroundColor3 = isFirst and Color3.fromRGB(31, 33, 36) or Color3.fromRGB(36, 36, 41),
-		BackgroundTransparency = isFirst and 0.05 or 1,
-		Size = UDim2.new(1, -14, 0, 38),
-		BorderSizePixel = 0,
-		Parent = self.ButtonHolder
-	})
-	CreateInstance("UICorner", {CornerRadius = UDim.new(0, 6), Parent = button})
-	CreateInstance("UIPadding", {PaddingLeft = UDim.new(0, 40), Parent = button})
-
-	local icon = CreateInstance("ImageLabel", {
-		Name = "Icon",
-		Image = tab.Icon,
-		ImageColor3 = isFirst and Color3.fromRGB(36, 120, 255) or Color3.fromRGB(177, 177, 177),
-		Size = UDim2.new(0, 20, 0, 20),
-		Position = UDim2.new(0, -26, 0.5, 0),
-		AnchorPoint = Vector2.new(0, 0.5),
-		BackgroundTransparency = 1,
-		Parent = button
-	})
-
-	-- Content ScrollingFrame
-	local content = CreateInstance("ScrollingFrame", {
-		Name = tab.Name .. "Tab",
-		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 1, 0),
-		ScrollBarThickness = config.ScrollBarEnabled and 2 or 0,
-		ScrollBarImageColor3 = Color3.fromRGB(36, 120, 255),
-		BorderSizePixel = 0,
-		Parent = self.ContentContainer,
-		Visible = isFirst
-	})
-	CreateInstance("UIPadding", {
-		PaddingLeft = UDim.new(0, 8),
-		PaddingRight = UDim.new(0, 8),
-		PaddingTop = UDim.new(0, 8),
-		PaddingBottom = UDim.new(0, 8),
-		Parent = content
-	})
-	local listLayout = CreateInstance("UIListLayout", {
-		SortOrder = Enum.SortOrder.LayoutOrder,
-		Padding = UDim.new(0, 12),
-		Parent = content
-	})
-
-	content.CanvasSize = UDim2.new(0, 0, 0, 0)
-	listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		content.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 20)
-	end)
-
-	-- Store
-	self.Tabs[tab.Name] = tab
-	self.NavButtons[tab.Name] = button
-	self.TabContents[tab.Name] = content
-
-	-- Click handler
-	button.MouseButton1Click:Connect(function()
-		self:SwitchTab(tab.Name)
-	end)
-
-	if isFirst then self.CurrentTab = tab.Name end
-
-	-- Tab methods
-	function tab:MultiSection(msConfig)
-		-- MultiSection example implementation (segmented sub-sections)
-		local section = self:CreateSection({Title = msConfig.Title or "Section", Box = msConfig.Box})
-
-		-- Sub navigation inside section
-		local subHolder = CreateInstance("Frame", {
-			Name = "SubTabs",
-			BackgroundTransparency = 1,
-			Size = UDim2.new(1, 0, 0, 40),
-			Parent = section.Content
-		})
-		local subList = CreateInstance("UIListLayout", {FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), Parent = subHolder})
-
-		local subContents = {}
-		for i, sub in ipairs(msConfig.Sections or {}) do
-			local subName, subIcon = sub[1], sub[2]
-			local subBtn = CreateInstance("TextButton", {
-				Text = subName,
-				TextColor3 = Color3.fromRGB(177, 177, 177),
-				BackgroundColor3 = Color3.fromRGB(36, 36, 41),
-				Size = UDim2.new(0, 90, 0, 32),
-				FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json"),
-				Parent = subHolder
-			})
-			CreateInstance("UICorner", {Parent = subBtn})
-
-			local subContent = CreateInstance("Frame", {
-				Name = subName,
-				BackgroundTransparency = 1,
-				Size = UDim2.new(1, 0, 1, -50),
-				Visible = i == 1,
-				Parent = section.Content
-			})
-
-			subContents[subName] = subContent
-			subBtn.MouseButton1Click:Connect(function()
-				for _, c in pairs(subContents) do c.Visible = false end
-				subContent.Visible = true
-			end)
-		end
-
-		section.SubContents = subContents
-		return section
-	end
-
-	function tab:CreateSection(secConfig)
-		local section = {}
-		secConfig = secConfig or {}
-
-		section.Frame = CreateInstance("Frame", {
-			Name = secConfig.Title or "Section",
-			BackgroundColor3 = Color3.fromRGB(17, 19, 22),
-			BackgroundTransparency = secConfig.Box and 0.25 or 0,
-			Size = UDim2.new(1, 0, 0, 40), -- will auto size
-			AutomaticSize = Enum.AutomaticSize.Y,
-			BorderSizePixel = 0,
-			Parent = content
-		})
-		CreateInstance("UICorner", {CornerRadius = UDim.new(0, 10), Parent = section.Frame})
-		if secConfig.BoxBorder then
-			CreateInstance("UIStroke", {Color = Color3.fromRGB(29, 29, 33), Thickness = 1, Parent = section.Frame})
-		end
-
-		-- Section Title
-		if secConfig.Title then
-			section.TitleLabel = CreateInstance("TextLabel", {
-				Name = "Title",
-				Text = secConfig.Title:upper(),
-				TextColor3 = Color3.fromRGB(156, 160, 164),
-				TextSize = 12,
-				FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json"),
-				BackgroundTransparency = 1,
-				Size = UDim2.new(1, 0, 0, 30),
-				Position = UDim2.new(0, 12, 0, -12),
-				TextXAlignment = Enum.TextXAlignment.Left,
-				Parent = section.Frame
-			})
-		end
-
-		section.Content = CreateInstance("Frame", {
-			Name = "Content",
-			BackgroundTransparency = 1,
-			Size = UDim2.new(1, 0, 1, 0),
-			AutomaticSize = Enum.AutomaticSize.Y,
-			Parent = section.Frame
-		})
-		CreateInstance("UIPadding", {PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12), PaddingTop = UDim.new(0, 12), PaddingBottom = UDim.new(0, 12), Parent = section.Content})
-		section.ListLayout = CreateInstance("UIListLayout", {
-			SortOrder = Enum.SortOrder.LayoutOrder,
-			Padding = UDim.new(0, 6),
-			Parent = section.Content
-		})
-
-		section.ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			-- auto height already handled by AutomaticSize
-		end)
-
-		-- Element methods
-		function section:AddButton(btnConfig)
-			local btn = CreateInstance("Frame", {
-				Name = "Button",
-				BackgroundColor3 = Color3.fromRGB(22, 21, 28),
-				BackgroundTransparency = 1,
-				Size = UDim2.new(1, 0, 0, 42),
-				Parent = section.Content
-			})
-			CreateInstance("UICorner", {CornerRadius = UDim.new(0, 6), Parent = btn})
-
-			local title = CreateInstance("TextLabel", {
-				Text = btnConfig.Title or "Button",
-				TextColor3 = Color3.fromRGB(207, 207, 207),
-				TextSize = 14,
-				FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json"),
-				BackgroundTransparency = 1,
-				Size = UDim2.new(1, -30, 1, 0),
-				TextXAlignment = Enum.TextXAlignment.Left,
-				Parent = btn
-			})
-			CreateInstance("UIPadding", {PaddingLeft = UDim.new(0, 12), Parent = title})
-
-			local icon = CreateInstance("ImageLabel", {
-				Image = btnConfig.Icon or "rbxassetid://10734898355",
-				ImageColor3 = Color3.fromRGB(207, 207, 207),
-				Size = UDim2.new(0, 20, 0, 20),
-				Position = UDim2.new(1, -12, 0.5, 0),
-				AnchorPoint = Vector2.new(1, 0.5),
-				BackgroundTransparency = 1,
-				Parent = btn
-			})
-
-			btn.InputBegan:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundTransparency = 0.7}):Play()
-					task.delay(0.1, function()
-						TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundTransparency = 1}):Play()
-					end)
-					if btnConfig.Callback then btnConfig.Callback() end
-				end
-			end)
-
-			return btn
-		end
-
-		function section:AddSlider(sliderConfig)
-			local slider = CreateInstance("Frame", {
-				Name = "Slider",
-				BackgroundColor3 = Color3.fromRGB(22, 21, 28),
-				BackgroundTransparency = 1,
-				Size = UDim2.new(1, 0, 0, 52),
-				Parent = section.Content
-			})
-			CreateInstance("UICorner", {CornerRadius = UDim.new(0, 6), Parent = slider})
-
-			local title = CreateInstance("TextLabel", {
-				Text = sliderConfig.Title or "Slider",
-				TextColor3 = Color3.fromRGB(207, 207, 207),
-				TextSize = 14,
-				TextXAlignment = Enum.TextXAlignment.Left,
-				FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json"),
-				BackgroundTransparency = 1,
-				Size = UDim2.new(1, -60, 0, 20),
-				Position = UDim2.new(0, 12, 0, 8),
-				Parent = slider
-			})
-
-			local valueLabel = CreateInstance("TextLabel", {
-				Name = "Value",
-				Text = tostring(sliderConfig.Default or 50),
-				TextColor3 = Color3.fromRGB(207, 207, 207),
-				TextSize = 14,
-				TextXAlignment = Enum.TextXAlignment.Right,
-				FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json"),
-				BackgroundTransparency = 1,
-				Size = UDim2.new(0, 50, 0, 20),
-				Position = UDim2.new(1, -12, 0, 8),
-				Parent = slider
-			})
-
-			local bar = CreateInstance("Frame", {
-				Name = "Bar",
-				BackgroundColor3 = Color3.fromRGB(36, 36, 41),
-				Size = UDim2.new(1, -24, 0, 6),
-				Position = UDim2.new(0, 12, 0, 34),
-				Parent = slider
-			})
-			CreateInstance("UICorner", {CornerRadius = UDim.new(0, 3), Parent = bar})
-
-			local fill = CreateInstance("Frame", {
-				Name = "Fill",
-				BackgroundColor3 = Color3.fromRGB(36, 120, 255),
-				Size = UDim2.new((sliderConfig.Default or 50) / 100, 0, 1, 0),
-				Parent = bar
-			})
-			CreateInstance("UICorner", {CornerRadius = UDim.new(0, 3), Parent = fill})
-
-			local knob = CreateInstance("Frame", {
-				Name = "Knob",
-				BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-				Size = UDim2.new(0, 14, 0, 14),
-				Position = UDim2.new((sliderConfig.Default or 50) / 100, -7, 0.5, 0),
-				AnchorPoint = Vector2.new(0.5, 0.5),
-				Parent = bar
-			})
-			CreateInstance("UICorner", {CornerRadius = UDim.new(1, 0), Parent = knob})
-
-			-- Drag logic
-			local min, max = sliderConfig.Min or 0, sliderConfig.Max or 100
-			local dragging = false
-
-			local function updateSlider(pos)
-				local percent = math.clamp((pos - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-				local val = math.floor(min + (max - min) * percent)
-				fill.Size = UDim2.new(percent, 0, 1, 0)
-				knob.Position = UDim2.new(percent, -7, 0.5, 0)
-				valueLabel.Text = tostring(val)
-				if sliderConfig.Callback then sliderConfig.Callback(val) end
-			end
-
-			bar.InputBegan:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					dragging = true
-					updateSlider(input.Position.X)
-				end
-			end)
-
-			UserInputService.InputChanged:Connect(function(input)
-				if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-					updateSlider(input.Position.X)
-				end
-			end)
-
-			UserInputService.InputEnded:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
-			end)
-
-			return slider
-		end
-
-		-- Add more elements (Dropdown, Toggle, etc.) can be added similarly...
-
-		return section
-	end
-
-	return tab
+local function makeDraggable(frame)
+    local dragging, dragInput, dragStart, startPos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
 end
 
-function Da7mUI:SwitchTab(tabName)
-	if self.CurrentTab == tabName then return end
+-- ────────────────────────────────────────────────────────────────────────────────
+--  Window Creation
+-- ────────────────────────────────────────────────────────────────────────────────
 
-	-- Deactivate old
-	if self.CurrentTab and self.NavButtons[self.CurrentTab] then
-		local oldBtn = self.NavButtons[self.CurrentTab]
-		oldBtn.Name = "Inactive"
-		oldBtn.BackgroundTransparency = 1
-		oldBtn.TextColor3 = Color3.fromRGB(177, 177, 177)
-		oldBtn.Icon.ImageColor3 = Color3.fromRGB(177, 177, 177)
-		self.TabContents[self.CurrentTab].Visible = false
-	end
+function Da7muUI:CreateWindow(options)
+    options = options or {}
+    local self = setmetatable({}, Da7muUI)
 
-	-- Activate new
-	local newBtn = self.NavButtons[tabName]
-	if newBtn then
-		newBtn.Name = "Active"
-		newBtn.BackgroundTransparency = 0.05
-		newBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		newBtn.Icon.ImageColor3 = Color3.fromRGB(36, 120, 255)
-		self.TabContents[tabName].Visible = true
-	end
+    self.Title       = options.Title       or "Da7mu UI"
+    self.Icon        = options.Icon        or nil
+    self.Author      = options.Author      or ""
+    self.Size        = options.Size        or UDim2.fromOffset(900, 650)
+    self.MinSize     = options.MinSize     or Vector2.new(700, 500)
+    self.MaxSize     = options.MaxSize     or Vector2.new(1200, 800)
+    self.Resizable   = options.Resizable   ~= false
+    self.Theme       = options.Theme       or DEFAULT_THEME
+    self.Blur        = options.Blur        ~= false
+    self.Folder      = options.Folder      or "Da7muUI"
 
-	self.CurrentTab = tabName
+    self.Tabs        = {}
+    self.CurrentTab  = nil
+
+    self:BuildGui()
+    self:ApplyTheme()
+
+    return self
 end
 
-return Da7mUI
+function Da7muUI:BuildGui()
+    -- ScreenGui
+    local sg = create("ScreenGui", {
+        Name = "Da7muUI",
+        IgnoreGuiInset = true,
+        Parent = PlayerGui,
+        ResetOnSpawn = false
+    })
+
+    -- Main Frame
+    local main = create("Frame", {
+        Name = "Main",
+        Size = self.Size,
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundColor3 = Color3.fromRGB(0,0,0),
+        BackgroundTransparency = 0.2,
+        BorderSizePixel = 0,
+        Parent = sg
+    })
+    create("UICorner", {CornerRadius = UDim.new(0,10), Parent = main})
+
+    -- Navigation (Sidebar)
+    local nav = create("Frame", {
+        Name = "Navigation",
+        Size = UDim2.new(0.14291, 0, 1, -65),
+        BackgroundColor3 = self.Theme.Background,
+        BackgroundTransparency = 0.6,
+        BorderSizePixel = 0,
+        Parent = main
+    })
+    create("UICorner", {Parent = nav})
+
+    -- Hub Icon & Name
+    create("ImageLabel", {
+        Name = "HubIcon",
+        Size = UDim2.new(0,40,0,43),
+        Position = UDim2.new(0,10,0,9),
+        BackgroundTransparency = 1,
+        Image = self.Icon or "rbxassetid://87255886721409", -- placeholder
+        Parent = nav
+    })
+
+    create("TextLabel", {
+        Name = "HubName",
+        Size = UDim2.new(0,200,0,50),
+        Position = UDim2.new(0,-20,0,0),
+        BackgroundTransparency = 1,
+        Text = self.Title,
+        TextColor3 = self.Theme.Text,
+        TextSize = 21,
+        FontFace = Font.new("rbxasset://fonts/families/Arial.json", Enum.FontWeight.Bold),
+        Parent = nav
+    })
+
+    -- Button Holder
+    local btnHolder = create("Frame", {
+        Name = "ButtonHolder",
+        Size = UDim2.new(1,0,0.886,0),
+        Position = UDim2.new(0,7,0,60),
+        BackgroundTransparency = 1,
+        Parent = nav
+    })
+    create("UIPadding", {PaddingTop = UDim.new(0,8), PaddingBottom = UDim.new(0,8), Parent = btnHolder})
+    create("UIListLayout", {Padding = UDim.new(0,1), SortOrder = Enum.SortOrder.LayoutOrder, Parent = btnHolder})
+
+    self.NavButtons = btnHolder
+
+    -- Content Container
+    local content = create("Frame", {
+        Name = "ContentContainer",
+        Size = UDim2.new(0.98209, -206, 1, -72),
+        Position = UDim2.new(1,-6,0,66),
+        AnchorPoint = Vector2.new(1,0),
+        BackgroundTransparency = 1,
+        Parent = main
+    })
+
+    self.Content = content
+
+    -- Make window draggable
+    makeDraggable(main)
+
+    -- Simple resizer (bottom-right corner) - optional
+    if self.Resizable then
+        local resizer = create("Frame", {
+            Size = UDim2.new(0,20,0,20),
+            Position = UDim2.new(1,-20,1,-20),
+            BackgroundTransparency = 1,
+            ZIndex = 10,
+            Parent = main
+        })
+        -- You can expand this with proper resize logic if desired
+    end
+
+    -- Store references
+    self.ScreenGui = sg
+    self.MainFrame = main
+    self.NavFrame   = nav
+end
+
+function Da7muUI:ApplyTheme()
+    local t = self.Theme
+    self.MainFrame.BackgroundColor3 = Color3.fromRGB(0,0,0) -- semi-transparent overlay
+    self.NavFrame.BackgroundColor3  = t.Background
+end
+
+-- ────────────────────────────────────────────────────────────────────────────────
+--  Tab System
+-- ────────────────────────────────────────────────────────────────────────────────
+
+function Da7muUI:Tab(options)
+    options = options or {}
+    local tab = {}
+    tab.Title   = options.Title or "Tab"
+    tab.Icon    = options.Icon  or nil
+    tab.Locked  = options.Locked or false
+
+    -- Navigation Button
+    local btn = create("TextLabel", {
+        Name = tab.Title,
+        Size = UDim2.new(1,-14,0,38),
+        BackgroundColor3 = Color3.fromRGB(36,36,41),
+        BackgroundTransparency = 1,
+        Text = tab.Title,
+        TextColor3 = Color3.fromRGB(177,177,177),
+        TextSize = 17,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        FontFace = Font.new("rbxasset://fonts/families/Arial.json", Enum.FontWeight.Medium),
+        Parent = self.NavButtons
+    })
+    create("UICorner", {Parent = btn})
+    create("UIPadding", {PaddingLeft = UDim.new(0,40), Parent = btn})
+
+    -- Icon
+    if tab.Icon then
+        create("ImageLabel", {
+            Name = "Icon",
+            Size = UDim2.new(0,20,0,20),
+            Position = UDim2.new(0,-26,0.5,0),
+            AnchorPoint = Vector2.new(0,0.5),
+            BackgroundTransparency = 1,
+            Image = tab.Icon,
+            ImageColor3 = Color3.fromRGB(177,177,177),
+            Parent = btn
+        })
+    end
+
+    -- Content Page
+    local page = create("ScrollingFrame", {
+        Name = tab.Title .. "Tab",
+        Size = UDim2.new(1,0,1,0),
+        BackgroundTransparency = 1,
+        ScrollBarThickness = 2,
+        ScrollBarImageColor3 = Color3.fromRGB(30,29,39),
+        CanvasSize = UDim2.new(0,0,0,0),
+        AutomaticCanvasSize = Enum.AutomaticSize.Y,
+        Visible = false,
+        Parent = self.Content
+    })
+    create("UIPadding", {PaddingLeft = UDim.new(0,18), PaddingRight = UDim.new(0,18), PaddingTop = UDim.new(0,10), Parent = page})
+    create("UIListLayout", {Padding = UDim.new(0,12), SortOrder = Enum.SortOrder.LayoutOrder, Parent = page})
+
+    tab.Button = btn
+    tab.Page   = page
+    tab.Library = self
+
+    table.insert(self.Tabs, tab)
+
+    -- Click handler
+    btn.MouseButton1Click:Connect(function()
+        if tab.Locked then return end
+        for _, t in ipairs(self.Tabs) do
+            t.Page.Visible = false
+            tween(t.Button, nil, {BackgroundTransparency = 1, TextColor3 = Color3.fromRGB(177,177,177)})
+            local icon = t.Button:FindFirstChild("Icon")
+            if icon then tween(icon, nil, {ImageColor3 = Color3.fromRGB(177,177,177)}) end
+        end
+        page.Visible = true
+        tween(btn, nil, {BackgroundTransparency = 0.05, TextColor3 = self.Theme.Text})
+        local icon = btn:FindFirstChild("Icon")
+        if icon then tween(icon, nil, {ImageColor3 = self.Theme.Accent}) end
+        self.CurrentTab = tab
+    end)
+
+    -- Auto-open first tab
+    if #self.Tabs == 1 then
+        btn.MouseButton1Click:Fire()
+    end
+
+    return tab
+end
+
+-- ────────────────────────────────────────────────────────────────────────────────
+--  Section
+-- ────────────────────────────────────────────────────────────────────────────────
+
+function Da7muUI.Section(tab, options)
+    local section = {}
+    options = options or {}
+
+    local frame = create("Frame", {
+        Name = "Section",
+        Size = UDim2.new(1,-5,0,0),
+        AutomaticSize = Enum.AutomaticSize.Y,
+        BackgroundColor3 = Color3.fromRGB(17,18,25),
+        BackgroundTransparency = 0.35,
+        Parent = tab.Page
+    })
+    create("UICorner", {CornerRadius = UDim.new(0,10), Parent = frame})
+    create("UIStroke", {Color = Color3.fromRGB(29,29,33), Transparency = 0.47, Thickness = 1.3, Parent = frame})
+
+    create("TextLabel", {
+        Name = "Title",
+        Size = UDim2.new(1,0,0,30),
+        BackgroundTransparency = 1,
+        Text = options.Title or "Section",
+        TextColor3 = tab.Library.Theme.Text,
+        TextSize = 16,
+        FontFace = Font.new("Arial", Enum.FontWeight.Bold),
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = frame
+    })
+
+    local list = create("UIListLayout", {
+        Padding = UDim.new(0,8),
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Parent = frame
+    })
+    list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        frame.Size = UDim2.new(1,-5,0,list.AbsoluteContentSize.Y + 40)
+    end)
+
+    section.Frame = frame
+    section.Tab   = tab
+
+    return section
+end
+
+-- Shortcut: Tab:Section({...})
+function Da7muUI.Tab:Section(options)
+    return Da7muUI.Section(self, options)
+end
+
+-- ────────────────────────────────────────────────────────────────────────────────
+--  Toggle
+-- ────────────────────────────────────────────────────────────────────────────────
+
+function Da7muUI.Toggle(section, options)
+    options = options or {}
+    local toggle = {}
+    local value = options.Default or false
+    local callback = options.Callback or function() end
+
+    local frame = create("Frame", {
+        Name = "Toggle",
+        Size = UDim2.new(1,0,0,32),
+        BackgroundTransparency = 1,
+        Parent = section.Frame
+    })
+    create("UICorner", {CornerRadius = UDim.new(0,4), Parent = frame})
+
+    create("TextLabel", {
+        Name = "Title",
+        Size = UDim2.new(1,-80,1,0),
+        BackgroundTransparency = 1,
+        Text = options.Title or "Toggle",
+        TextColor3 = section.Tab.Library.Theme.Text,
+        TextSize = 16,
+        FontFace = Font.new("Arial", Enum.FontWeight.Bold),
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = frame
+    })
+
+    local switch = create("Frame", {
+        Name = "Switch",
+        Size = UDim2.new(0,45,0,25),
+        Position = UDim2.new(1,-55,0.5,0),
+        AnchorPoint = Vector2.new(1,0.5),
+        BackgroundColor3 = value and Color3.fromRGB(60,95,201) or Color3.fromRGB(12,12,19),
+        Parent = frame
+    })
+    create("UICorner", {CornerRadius = UDim.new(0,20), Parent = switch})
+
+    local circle = create("Frame", {
+        Name = "Circle",
+        Size = UDim2.new(0,20,0,20),
+        Position = value and UDim2.new(0.55,0,0.5,0) or UDim2.new(0,2,0.5,0),
+        AnchorPoint = Vector2.new(0,0.5),
+        BackgroundColor3 = value and Color3.fromRGB(203,203,199) or Color3.fromRGB(94,109,124),
+        Parent = switch
+    })
+    create("UICorner", {CornerRadius = UDim.new(1,0), Parent = circle})
+
+    local clicking = false
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            clicking = true
+        end
+    end)
+    frame.InputEnded:Connect(function(input)
+        if clicking and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            value = not value
+            tween(switch, nil, {BackgroundColor3 = value and Color3.fromRGB(60,95,201) or Color3.fromRGB(12,12,19)})
+            tween(circle, TweenInfo.new(0.2), {Position = value and UDim2.new(0.55,0,0.5,0) or UDim2.new(0,2,0.5,0)})
+            callback(value)
+        end
+        clicking = false
+    end)
+
+    toggle.Value = function() return value end
+    toggle.Set = function(v)
+        value = v
+        tween(switch, nil, {BackgroundColor3 = value and Color3.fromRGB(60,95,201) or Color3.fromRGB(12,12,19)})
+        tween(circle, TweenInfo.new(0.2), {Position = value and UDim2.new(0.55,0,0.5,0) or UDim2.new(0,2,0.5,0)})
+        callback(value)
+    end
+
+    return toggle
+end
+
+-- Tab:Toggle({...})
+function Da7muUI.Tab:Toggle(options) return Da7muUI.Toggle(self, options) end
+
+-- ────────────────────────────────────────────────────────────────────────────────
+--  Slider (very simplified version)
+-- ────────────────────────────────────────────────────────────────────────────────
+
+function Da7muUI.Slider(section, options)
+    options = options or {}
+    local slider = {}
+    local min = options.Min or 0
+    local max = options.Max or 100
+    local val = options.Default or min
+    local callback = options.Callback or function() end
+
+    local frame = create("Frame", {
+        Name = "Slider",
+        Size = UDim2.new(1,0,0,50),
+        BackgroundTransparency = 1,
+        Parent = section.Frame
+    })
+
+    create("TextLabel", {
+        Name = "Title",
+        Size = UDim2.new(1,0,0,20),
+        BackgroundTransparency = 1,
+        Text = options.Title or "Slider",
+        TextColor3 = section.Tab.Library.Theme.Text,
+        TextSize = 16,
+        Font = Enum.Font.ArialBold,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = frame
+    })
+
+    local bar = create("Frame", {
+        Name = "Bar",
+        Size = UDim2.new(1,0,0,6),
+        Position = UDim2.new(0,0,0,34),
+        BackgroundColor3 = Color3.fromRGB(36,36,41),
+        Parent = frame
+    })
+    create("UICorner", {Parent = bar})
+
+    local fill = create("Frame", {
+        Size = UDim2.new((val-min)/(max-min),0,1,0),
+        BackgroundColor3 = section.Tab.Library.Theme.Accent,
+        Parent = bar
+    })
+    create("UICorner", {Parent = fill})
+
+    local label = create("TextLabel", {
+        Size = UDim2.new(0,50,0,20),
+        Position = UDim2.new(1,-55,0,-5),
+        BackgroundColor3 = Color3.fromRGB(26,25,32),
+        Text = tostring(val),
+        TextColor3 = Color3.fromRGB(180,180,180),
+        Parent = frame
+    })
+    create("UICorner", {Parent = label})
+
+    -- Dragging logic (simplified)
+    local conn
+    bar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local function update()
+                local mousePos = UserInputService:GetMouseLocation()
+                local rel = math.clamp((mousePos.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+                val = math.floor(min + (max - min) * rel + 0.5)
+                fill.Size = UDim2.new(rel,0,1,0)
+                label.Text = tostring(val)
+                callback(val)
+            end
+            update()
+            conn = RunService.RenderStepped:Connect(update)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and conn then
+            conn:Disconnect()
+            conn = nil
+        end
+    end)
+
+    slider.Value = function() return val end
+    slider.Set = function(v)
+        val = math.clamp(v, min, max)
+        local ratio = (val - min) / (max - min)
+        fill.Size = UDim2.new(ratio, 0, 1, 0)
+        label.Text = tostring(val)
+        callback(val)
+    end
+
+    return slider
+end
+
+function Da7muUI.Tab:Slider(options) return Da7muUI.Slider(self, options) end
+
+-- ────────────────────────────────────────────────────────────────────────────────
+--  Dropdown (single select only - multi can be added later)
+-- ────────────────────────────────────────────────────────────────────────────────
+
+function Da7muUI.Dropdown(section, options)
+    options = options or {}
+    local dd = {}
+    local values = options.Values or {}
+    local current = options.Default or values[1]
+    local callback = options.Callback or function() end
+
+    local frame = create("Frame", {
+        Name = "Dropdown",
+        Size = UDim2.new(1,0,0,32),
+        BackgroundTransparency = 1,
+        Parent = section.Frame
+    })
+
+    create("TextLabel", {
+        Name = "Title",
+        Size = UDim2.new(0.5,0,1,0),
+        BackgroundTransparency = 1,
+        Text = options.Title or "Dropdown",
+        TextColor3 = section.Tab.Library.Theme.Text,
+        TextSize = 16,
+        Font = Enum.Font.ArialBold,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = frame
+    })
+
+    local box = create("Frame", {
+        Size = UDim2.new(0.45,0,0,28),
+        Position = UDim2.new(1,-10,0.5,0),
+        AnchorPoint = Vector2.new(1,0.5),
+        BackgroundColor3 = Color3.fromRGB(26,25,32),
+        Parent = frame
+    })
+    create("UICorner", {CornerRadius = UDim.new(0,5), Parent = box})
+
+    local label = create("TextLabel", {
+        Size = UDim2.new(1,-30,1,0),
+        BackgroundTransparency = 1,
+        Text = current or "Select...",
+        TextColor3 = Color3.fromRGB(180,180,180),
+        TextSize = 14,
+        Parent = box
+    })
+
+    -- Dropdown list (hidden by default)
+    local listFrame = create("ScrollingFrame", {
+        Size = UDim2.new(0.45,0,0,120),
+        Position = UDim2.new(1,-10,1,8),
+        AnchorPoint = Vector2.new(1,0),
+        BackgroundColor3 = Color3.fromRGB(22,21,28),
+        CanvasSize = UDim2.new(0,0,0,0),
+        AutomaticCanvasSize = Enum.AutomaticSize.Y,
+        ScrollBarThickness = 4,
+        Visible = false,
+        ZIndex = 5,
+        Parent = frame
+    })
+    create("UICorner", {Parent = listFrame})
+    create("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Parent = listFrame})
+
+    for _, v in ipairs(values) do
+        local btn = create("TextButton", {
+            Size = UDim2.new(1,0,0,28),
+            BackgroundTransparency = 1,
+            Text = tostring(v),
+            TextColor3 = Color3.fromRGB(180,180,180),
+            Parent = listFrame
+        })
+        btn.MouseButton1Click:Connect(function()
+            current = v
+            label.Text = tostring(v)
+            listFrame.Visible = false
+            callback(v)
+        end)
+        btn.MouseEnter:Connect(function() tween(btn, nil, {BackgroundTransparency = 0.85}) end)
+        btn.MouseLeave:Connect(function() tween(btn, nil, {BackgroundTransparency = 1}) end)
+    end
+
+    box.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            listFrame.Visible = not listFrame.Visible
+        end
+    end)
+
+    dd.Value = function() return current end
+    dd.Set = function(v)
+        if table.find(values, v) then
+            current = v
+            label.Text = tostring(v)
+            callback(v)
+        end
+    end
+
+    return dd
+end
+
+function Da7muUI.Tab:Dropdown(options) return Da7muUI.Dropdown(self, options) end
+
+-- Export
+return Da7muUI
